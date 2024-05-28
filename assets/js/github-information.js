@@ -13,7 +13,29 @@ function userInformationHTML(user) {
             </div>
             <p>Followers: ${user.followers} - Following: ${user.following} <br> Repos: ${user.public_repos}</p>
         </div>`
-}
+};
+
+
+function repoInformationHTML(repos) {
+    if (repos.length == 0) {
+        return `<div class="clearfix repo-list"> No repos! </div>`
+    }
+
+    var listItemsHTML = repos.map(function(repo) {
+        return `<li>
+            <a href="${repo.html_url}" target="_blank">${repo.name}</a>
+        </li>`
+    });
+
+    return `<div class="clearfix repo-list"> 
+        <p>
+            <strong> Repo List:</strong>
+        </p>
+        <ul>
+            ${listItemsHTML.join("\n")}
+        </ul>
+    </div>`
+};
 
 
 function fetchGitHubInformation(event) {
@@ -31,11 +53,16 @@ function fetchGitHubInformation(event) {
     
     // promise
     $.when(
-        $.getJSON(`https://api.github.com/users/${username}`)
+        $.getJSON(`https://api.github.com/users/${username}`),
+        $.getJSON(`https://api.github.com/users/${username}/repos`)
     ).then(
-        function(response) {
-            var userData = response;
+        function(firstResponse, secondResponse) {
+            // the when method packs responses into arrays and each response is the first
+            // element in the array
+            var userData = firstResponse[0];
+            var repoData = secondResponse[0];
             $("#gh-user-data").html(userInformationHTML(userData));
+            $("#gh-user-data").html(repoInformationHTML(repoData));
         },
         // if username doesn't exist
         function(errorResponse) {
